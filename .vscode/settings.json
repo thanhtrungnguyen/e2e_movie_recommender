@@ -1,0 +1,17 @@
+{
+  "editor.tabSize": 2,
+  "editor.detectIndentation": false,
+
+  // enable agent mode
+  "chat.agent.enabled": true,
+  // let the agent drive more iterations before pausing (default: 15 for Pro)
+  "chat.agent.maxRequests": 50,
+  // let the agent run your tasks.json tasks without asking each time
+  "github.copilot.chat.agent.runTasks": true,
+  // auto-diagnose & fix compile/lint/test failures (default: true)
+  "github.copilot.chat.agent.autoFix": true,
+  // (experimental) auto-approve any tool or terminal invocation
+  "chat.tools.autoApprove": true,
+  // auto-accept file edits after a short delay (hover cancel if you need)
+  "chat.editing.autoAcceptDelay": 5
+}

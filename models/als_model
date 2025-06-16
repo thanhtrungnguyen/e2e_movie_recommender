@@ -1,0 +1,2 @@
+# Placeholder for ALS model file or directory
+# In production, this would be a serialized model (e.g., via pickle, joblib, or Spark's save method)

@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "movie-recommender-monorepo"
+version = "0.1.0"
+description = "End-to-end movie recommendation monorepo"
+authors = ["You <you@example.com>"]
+packages = []
+
+[tool.poetry.workspaces]
+include = ["api/*", "spark", "airflow", "postgres", "libs/*"]
+
+[tool.poetry.group.base.dependencies]
+fastapi = "^0.110"
+psycopg2 = "^2.9"
+pydantic = "^2.7"
+
+[tool.poetry.group.kafka.dependencies]
+kafka-python = "^2.0"
+
+[tool.poetry.group.spark.dependencies]
+pyspark = "^3.5"
+
+[tool.poetry.group.dev.dependencies]
+black = "^24.0"
+pytest = "^8.0"
+mypy = "^1.9"

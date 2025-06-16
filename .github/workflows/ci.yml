@@ -1,0 +1,27 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        project: ["api/interact", "api/recommend"]
+        groups: ["base,kafka", "base,spark"]
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Python & Poetry
+        uses: snok/install-poetry@v1
+      - name: Install dependencies
+        run: |
+          cd ${{ matrix.project }}
+          poetry install --no-interaction --only ${{ matrix.groups }}
+      - name: Run tests
+        run: |
+          cd ${{ matrix.project }}
+          pytest

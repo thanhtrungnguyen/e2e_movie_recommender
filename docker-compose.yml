@@ -1,0 +1,168 @@
+version: "3.8"
+
+networks:
+  movie-net:
+    driver: bridge
+
+volumes:
+  pgdata:
+  kafka-data:
+  spark-data:
+  cassandra-data:
+
+services:
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    container_name: kafka
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
+    ports:
+      - "9092:9092"
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+    networks:
+      - movie-net
+    restart: unless-stopped
+
+  schema-registry:
+    image: confluentinc/cp-schema-registry:latest
+    container_name: schema-registry
+    depends_on:
+      - kafka
+    environment:
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: PLAINTEXT://kafka:9092
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry
+      SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
+    ports:
+      - "8081:8081"
+    networks:
+      - movie-net
+    restart: unless-stopped
+
+  control-center:
+    image: confluentinc/cp-enterprise-control-center:latest
+    container_name: control-center
+    depends_on:
+      - kafka
+      - schema-registry
+    environment:
+      CONTROL_CENTER_BOOTSTRAP_SERVERS: kafka:9092
+      CONTROL_CENTER_SCHEMA_REGISTRY_URL: http://schema-registry:8081
+      CONTROL_CENTER_REPLICATION_FACTOR: 1
+      CONTROL_CENTER_INTERNAL_TOPICS_PARTITIONS: 1
+      CONTROL_CENTER_MONITORING_INTERCEPTOR_TOPIC_PARTITIONS: 1
+      PORT: 9021
+    ports:
+      - "9021:9021"
+    networks:
+      - movie-net
+    restart: unless-stopped
+
+  cassandra_db:
+    image: cassandra:latest
+    container_name: cassandra_db
+    ports:
+      - "9042:9042"
+    volumes:
+      - cassandra-data:/var/lib/cassandra
+    networks:
+      - movie-net
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:latest
+    container_name: postgres
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: pass
+      POSTGRES_DB: movies
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - movie-net
+    restart: unless-stopped
+
+  spark-master:
+    image: bitnami/spark:latest
+    container_name: spark-master
+    environment:
+      - SPARK_MODE=master
+    ports:
+      - "7077:7077"
+      - "8080:8080"
+    volumes:
+      - spark-data:/bitnami/spark
+    networks:
+      - movie-net
+    restart: unless-stopped
+
+  spark-worker:
+    image: bitnami/spark:latest
+    container_name: spark-worker
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_MASTER_URL=spark://spark-master:7077
+    depends_on:
+      - spark-master
+    networks:
+      - movie-net
+    restart: unless-stopped
+
+  api-interact:
+    build:
+      context: .
+      dockerfile: api/interact/Dockerfile
+    container_name: api-interact
+    ports:
+      - "8000:8000"
+    environment:
+      - KAFKA_BOOTSTRAP=kafka:9092
+      - KAFKA_TOPIC=user-events
+    depends_on:
+      - kafka
+    networks:
+      - movie-net
+    restart: unless-stopped
+
+  api-recommend:
+    build:
+      context: .
+      dockerfile: api/recommend/Dockerfile
+    container_name: api-recommend
+    ports:
+      - "8001:8001"
+    environment:
+      - DB_URL=postgresql://user:pass@postgres:5432/movies
+      - MODEL_PATH=/models/als_model
+    depends_on:
+      - postgres
+      - spark-master
+    networks:
+      - movie-net
+    restart: unless-stopped
+
+  airflow:
+    build: ./airflow
+    container_name: airflow
+    ports:
+      - "8085:8080"
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgresql+psycopg2://user:pass@postgres:5432/movies
+    depends_on:
+      - postgres
+    networks:
+      - movie-net
+    restart: unless-stopped
