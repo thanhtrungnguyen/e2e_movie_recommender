@@ -21,7 +21,7 @@ with open(config_path, 'r') as f:
 spark = SparkSession.builder \
     .appName("MovieRecommender") \
     .config("spark.driver.host", "localhost") \
-    .config("spark.jars.packages", "org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0") \
+    .config("spark.jars.packages", "org.apache.spark:spark-sql-kafka-0-10_2.13:4.0.0") \
     .getOrCreate()
 
 # Define schema for ratings data
@@ -95,7 +95,7 @@ def send_to_kafka(recommendations_df):
 
 def main():
     # Load data
-    ratings_df = load_data('/data/ratings.csv')
+    ratings_df = load_data('./data/ratings.csv')
 
     # Train model
     model, predictions = train_model(ratings_df)
@@ -113,7 +113,10 @@ def main():
     send_to_kafka(recommendations_df)
 
     # Save model (optional)
-    model.save("/models/als_model")
+    model_dir = os.path.join(os.path.dirname(__file__), '../models/als_model')
+    model_dir = os.path.abspath(model_dir)
+    os.makedirs(os.path.dirname(model_dir), exist_ok=True)
+    model.save(model_dir)
 
     spark.stop()
 
