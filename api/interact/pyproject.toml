@@ -1,19 +1,9 @@
-[tool.poetry]
+[project]
 name = "interact"
 version = "0.1.0"
-description = "User interaction API"
-authors = ["You <you@example.com>"]
-
-[tool.poetry.dependencies]
-python = "^3.10"
-libs-common = { path = "./libs/common" }
-uvicorn = "*"
-
-[tool.poetry.group.base.dependencies]
-# Inherit from root
-
-[tool.poetry.group.kafka.dependencies]
-# Inherit from root
-
-[tool.poetry.group.dev.dependencies]
-# Inherit from root
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi[standard]",
+]

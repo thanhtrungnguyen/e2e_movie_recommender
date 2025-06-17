@@ -1,1 +1,0 @@
-# Shared settings loader placeholder

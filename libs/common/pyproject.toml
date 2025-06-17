@@ -1,11 +1,7 @@
-[tool.poetry]
-name = "libs-common"
+[project]
+name = "common"
 version = "0.1.0"
-description = "Common library"
-authors = ["You <you@example.com>"]
-
-[tool.poetry.dependencies]
-python = "^3.10"
-
-[tool.poetry.group.base.dependencies]
-# Inherit from root
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = []

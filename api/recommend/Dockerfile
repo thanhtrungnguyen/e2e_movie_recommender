@@ -1,9 +1,14 @@
-FROM python:3.13.5-slim-bookworm
+FROM python:3.13-slim
+
+# Install uv.
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+
+# Copy the application into the container.
+COPY . /app
+
+# Install the application dependencies.
 WORKDIR /app
-COPY api/recommend/pyproject.toml api/recommend/poetry.lock* /app/
-COPY libs/common ./libs/common
-RUN pip install poetry && \
-    poetry config virtualenvs.create false && \
-    poetry install --no-root --only base,spark
-COPY api/recommend/. .
-CMD ["uvicorn","app.main:app","--host","0.0.0.0","--port","8001"]
+RUN uv sync --frozen --no-cache
+
+# Run the application.
+CMD ["/app/.venv/bin/fastapi", "run", "main.py", "--port", "8001", "--host", "0.0.0.0"]
