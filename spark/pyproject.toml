@@ -5,10 +5,10 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
-    "confluent-kafka",
-    "findspark",
-    "numpy",
-    "pandas",
-    "py4j",
-    "pyspark",
+    "confluent-kafka>=2.10.1",
+    "findspark>=2.0.1",
+    "numpy>=2.3.0",
+    "pandas>=2.3.0",
+    "py4j>=0.10.9.9",
+    "pyspark>=4.0.0",
 ]
